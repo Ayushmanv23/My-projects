@@ -1,0 +1,210 @@
+import getpass          #provides a platform-independent way to enter a password in a command-line program
+
+user_data = {
+    "user1": {
+        "pin": "1111",
+        "balance": 10000.0,
+        "login_attempts": 0,
+    },
+    "user2": {
+        "pin": "2222",
+        "balance": 15000.0,
+        "login_attempts": 0,
+    },
+    "user3": {
+        "pin": "3333",
+        "balance": 20000.0,
+        "login_attempts": 0,
+    },
+    "user4": {
+        "pin": "4444",
+        "balance": 25000.0,
+        "login_attempts": 0,
+    },
+    "user5": {
+        "pin": "5555",
+        "balance": 30000.0,
+        "login_attempts": 0,
+    },
+}
+
+admin_password = "admin123"
+admin_data = {
+    "admin": {
+        "pin": "admin123",
+        "balance": {
+            100: 500,
+            200: 1000,
+            500: 2000,
+            2000: 5000,
+        },
+    },
+}
+
+def clear_screen():
+    print("\033c", end="")
+
+def display_balance(account):
+    print(f"Your account balance is: ${account['balance']:.2f}")
+
+def deposit(account, amount, denominations):
+    for denomination, count in denominations.items():
+        account['balance'][denomination] += amount * count
+    display_balance(account)
+
+def withdraw(account, amount, denominations):
+    if account['balance']["total"] >= amount:
+        for denomination, count in denominations.items():
+            account['balance'][denomination] -= amount * count
+        display_balance(account)
+    else:
+        print("Insufficient funds.")
+
+def change_password(account):
+    current_password = getpass.getpass("Enter current password: ")
+    if current_password == account['pin']:
+        new_password = getpass.getpass("Enter new password: ")
+        account['pin'] = new_password
+        print("Password changed successfully.")
+    else:
+        print("Incorrect current password. Retry.")
+
+def admin_check_balance(admin_account):
+    total_balance = sum(denomination * count for denomination, count in admin_account['balance'].items())
+    print(f"Total admin balance is: ${total_balance:.2f}")
+
+def admin_deposit(admin_account, amount, denominations):
+    for denomination, count in denominations.items():
+        admin_account['balance'][denomination] += amount * count
+    admin_check_balance(admin_account)
+
+def send_notification(user_account):
+    if user_account['balance'] < 75000:
+        print("Notification: Your account balance is less than 75k. Please consider depositing more.")
+
+def login_user(username, pin):
+    if username in user_data and pin == user_data[username]["pin"]:
+        user_account = user_data[username]
+        user_account["login_attempts"] = 0  # Reset login attempts
+        return user_account
+    else:
+        print("Invalid username or PIN.")
+        return None
+
+def handle_login_attempts(user_account):
+    user_account["login_attempts"] += 1
+    if user_account["login_attempts"] >= 3:
+        print("Account locked. Too many unsuccessful login attempts.")
+        return True
+    return False
+
+def main():
+    print("***Welcome to the ATM***")
+    while True:
+        print("\nPlease choose an option:")
+        print("1. User Login")
+        print("2. Admin Login")
+        print("3. Loan Repayment")
+        print("4. Quit")
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            # User Login Section
+            username = input("Enter your username: ")
+            pin = getpass.getpass("Enter your PIN: ")
+
+            user_account = login_user(username, pin)
+            if user_account:
+                clear_screen()
+                while True:
+                    print("\nUser Menu:")
+                    print("1. Check Balance")
+                    print("2. Deposit")
+                    print("3. Withdraw")
+                    print("4. Change Password")
+                    print("5. Logout")
+                    option = input("Enter your option: ")
+
+                    if option == "1":
+                        display_balance(user_account)
+                    elif option == "2":
+                        amount = float(input("Enter the deposit amount: $"))
+                        denominations = {
+                            100: int(input("Number of 100 notes: ")),
+                            200: int(input("Number of 200 notes: ")),
+                            500: int(input("Number of 500 notes: ")),
+                            2000: int(input("Number of 2000 notes: ")),
+                        }
+                        deposit(user_account, amount, denominations)
+                        send_notification(user_account)
+                    elif option == "3":
+                        amount = float(input("Enter the withdrawal amount: $"))
+                        denominations = {
+                            100: int(input("Number of 100 notes: ")),
+                            200: int(input("Number of 200 notes: ")),
+                            500: int(input("Number of 500 notes: ")),
+                            2000: int(input("Number of 2000 notes: ")),
+                        }
+                        withdraw(user_account, amount, denominations)
+                        send_notification(user_account)
+                    elif option == "4":
+                        change_password(user_account)
+                    elif option == "5":
+                        break
+                    else:
+                        print("Invalid choice. Please try again.")
+
+                    if handle_login_attempts(user_account):
+                        break
+        elif choice == "2":
+            # Admin Login Section
+            admin_pin = getpass.getpass("Enter the admin password: ")
+            if admin_pin == admin_password:
+                clear_screen()
+                print("Admin Menu:")
+                print("1. View User Data")
+                print("2. Check Admin Balance")
+                print("3. Admin Deposit")
+                print("4. Logout")
+                admin_option = input("Enter your option: ")
+                if admin_option == "1":
+                    for username, account in user_data.items():
+                        print(f"Username: {username}, Balance: ${account['balance']['total']:.2f}")
+                elif admin_option == "2":
+                    admin_check_balance(admin_data["admin"])
+                elif admin_option == "3":
+                    amount = float(input("Enter the deposit amount: $"))
+                    denominations = {
+                        100: int(input("Number of 100 notes: ")),
+                        200: int(input("Number of 200 notes: ")),
+                        500: int(input("Number of 500 notes: ")),
+                        2000: int(input("Number of 2000 notes: ")),
+                    }
+                    admin_deposit(admin_data["admin"], amount, denominations)
+                elif admin_option == "4":
+                    clear_screen()
+                else:
+                    print("Invalid choice. Please try again.")
+            else:
+                print("Invalid admin password. Access denied.")
+
+        elif choice == "3":
+            # Loan repayment system
+            print("***** WELCOME TO OUR LOAN REPAYMENT SYSTEM *****")
+            loan_id = str(input("Please enter your loan id:"))  # Enter this id - 2723MDL2123
+            if loan_id == '2723MDL2123':
+                loan_amount = 50000
+                tenure = 5
+                installment = loan_amount / tenure
+                loan_rep(loan_amount, installment)
+            else:
+                print("Invalid loan ID!")
+
+        elif choice == "4":
+            print("Thank you for using My ATM!")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
