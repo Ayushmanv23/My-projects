@@ -1,0 +1,97 @@
+#include<stdio.h>
+#define NUM_ITEMS 5
+
+typedef struct
+{
+    char name[30];
+    float price;                                                                        // Structure to hold item information
+    int quantity;
+}Item;
+
+void displayItems(Item items[], int numItems)
+{
+    printf("Available items:\n");
+    for(int i=0;i<numItems;i++)
+    {
+        printf("%d. %s - $%.2f (Stock: %d)\n", i+1, items[i].name, items[i].price, items[i].quantity);
+    }
+}
+
+void displayCart(Item cart[], int cartSize)
+{
+    printf("\nYour cart:\n");
+    float totalCost = 0.0;
+    for(int i=0;i<cartSize;i++)
+    {
+        if(cart[i].quantity > 0)
+        {
+            printf("%s - $%.2f x %d\n", cart[i].name, cart[i].price, cart[i].quantity);
+            totalCost += cart[i].price * cart[i].quantity;
+        }
+    }
+    printf("Total cost: $%.2f\n", totalCost);
+}
+
+int main()
+{
+    Item items[NUM_ITEMS] = {
+        {"T-Shirt", 19.99, 10},
+        {"Jeans", 39.99, 5},
+        {"Sweater", 29.99, 7},
+        {"Jacket", 59.99, 3},
+        {"Hat", 15.99, 20}
+    };
+
+    Item cart[NUM_ITEMS] = {0};                                                             // Initialize cart with zero quantities
+    int choice, quantity;
+    int cartSize = 0;
+    printf("*** { WELCOME TO B.TECH CLOTHING } ***\n\n");
+    displayItems(items, NUM_ITEMS);
+    while(1)
+    {
+
+
+        printf("\nSelect the item you want to purchase (0 to quit, -1 to view cart): ");
+        scanf("%d", &choice);
+
+        if (choice == 0) {
+            break;
+        } else if (choice == -1) {
+            displayCart(cart, cartSize);
+            continue;
+        } else if (choice > 0 && choice <= NUM_ITEMS) {
+            printf("Enter the quantity you want to purchase: ");
+            scanf("%d", &quantity);
+
+            if (quantity > items[choice - 1].quantity) {
+                printf("Sorry, we don't have enough stock for that item.\n");
+            } else {
+                items[choice - 1].quantity -= quantity;
+
+                // Add to cart
+                int found = 0;
+                for (int i = 0; i < cartSize; i++) {
+                    if (strcmp(cart[i].name, items[choice - 1].name) == 0) {
+                        cart[i].quantity += quantity;
+                        found = 1;
+                        break;
+                    }
+                }
+                if (!found) {
+                    cart[cartSize] = items[choice - 1];
+                    cart[cartSize].quantity = quantity;
+                    cartSize++;
+                }
+
+                printf("You selected %d x %s. Added to your cart.\n", quantity, items[choice - 1].name);
+            }
+        } else {
+            printf("Invalid choice. Please try again.\n");
+        }
+    }
+
+    printf("\nThank you for shopping with us!\n");
+    displayCart(cart, cartSize);
+
+    return 0;
+}
